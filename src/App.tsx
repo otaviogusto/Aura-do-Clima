@@ -28,6 +28,31 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+// --- Background Images ---
+import bgChuva from './imagens-de-fundo/clima_chuva.png';
+import bgEnsolarado from './imagens-de-fundo/clima_ensolarado.png';
+import bgIris from './imagens-de-fundo/clima_iris.png';
+import bgNascerSol from './imagens-de-fundo/clima_nascer_sol.png';
+import bgNeblina from './imagens-de-fundo/clima_neblina.png';
+import bgNeve from './imagens-de-fundo/clima_neve.png';
+import bgNoiteLua from './imagens-de-fundo/clima_noite_lua.png';
+import bgPorSol from './imagens-de-fundo/clima_por_sol.png';
+import bgTempestade from './imagens-de-fundo/clima_tempestade.png';
+import bgVento from './imagens-de-fundo/clima_vento.png';
+
+const BACKGROUND_IMAGES = [
+  bgChuva,
+  bgEnsolarado,
+  bgIris,
+  bgNascerSol,
+  bgNeblina,
+  bgNeve,
+  bgNoiteLua,
+  bgPorSol,
+  bgTempestade,
+  bgVento
+];
+
 // --- Types ---
 interface WeatherData {
   city: string;
@@ -205,7 +230,16 @@ const MainCard = ({ data }: { data: WeatherData }) => {
   );
 };
 
-const DetailCard = ({ icon: Icon, title, value, description, className = "", extraIcon: ExtraIcon }: any) => {
+interface DetailCardProps {
+  icon: React.ElementType;
+  title: string;
+  value: string | number;
+  description: React.ReactNode;
+  className?: string;
+  extraIcon?: React.ElementType;
+}
+
+const DetailCard = ({ icon: Icon, title, value, description, className = "", extraIcon: ExtraIcon }: DetailCardProps) => {
   return (
     <div className={`weather-card p-5 flex flex-col justify-between relative ${className}`}>
       <div className="flex items-center text-gray-400 text-[10px] uppercase tracking-widest font-bold mb-4">
@@ -238,6 +272,38 @@ const ForecastCard = ({ day, icon, high, low }: ForecastDay) => {
         <span className="text-xl font-bold">{high}°</span>
         <span className="text-gray-500 text-xs">{low}°</span>
       </div>
+    </div>
+  );
+};
+
+const BackgroundSlider = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
+    }, 10000); // Muda a cada 10 segundos
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 -z-10 bg-black overflow-hidden pointer-events-none">
+      <AnimatePresence initial={false}>
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.3 }} // Transparência suave
+          exit={{ opacity: 0 }}
+          transition={{ 
+            duration: 4, // Transição bem lenta e suave
+            ease: "easeInOut"
+          }}
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110" // Pequeno zoom para evitar bordas
+          style={{ backgroundImage: `url(${BACKGROUND_IMAGES[currentIndex]})` }}
+        />
+      </AnimatePresence>
+      {/* Overlay para suavizar ainda mais com o tema */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/40" />
     </div>
   );
 };
@@ -280,7 +346,7 @@ export default function App() {
           condition_slug: res.condition_slug
         });
 
-        const forecastData = res.forecast.slice(1, 6).map((f: any) => ({
+        const forecastData = res.forecast.slice(1, 6).map((f: { weekday: string; condition: string; max: number; min: number }) => ({
           day: f.weekday.toUpperCase(),
           icon: getIcon(f.condition),
           high: f.max,
@@ -314,7 +380,9 @@ export default function App() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto min-h-screen flex flex-col">
+    <div className="relative min-h-screen">
+      <BackgroundSlider />
+      <div className="max-w-7xl mx-auto min-h-screen flex flex-col relative z-10">
       <Header onSearch={handleSearch} currentTheme={theme} onThemeChange={setTheme} />
 
       <main className="flex-1 p-4 md:p-8 space-y-8">
@@ -407,6 +475,7 @@ export default function App() {
         </p>
         <p className="italic opacity-70">Soluções tecnológicas para o seu negócio.</p>
       </footer>
+      </div>
     </div>
   );
 }
